@@ -750,13 +750,20 @@ const RelationModalWithContext = ({
 
   const options = data?.results ?? [];
 
-  React.useLayoutEffect(() => {
-    setTextValue('');
-  }, [fieldValue]);
-
   const handleSearch = async (search: string) => {
     setSearchParams((s) => ({ ...s, _q: search, page: 1 }));
   };
+
+  /**
+   * After a selection the input shows the selected label, which must not be used as a search
+   * query: reopening the dropdown should list the remaining relations, not filter by that label.
+   * This is a passive effect (not a layout effect) so it runs after the combobox has synced its own
+   * text to the selected option, otherwise the label would be restored and used as the search.
+   */
+  React.useEffect(() => {
+    setTextValue('');
+    setSearchParams((s) => (s._q === '' && s.page === 1 ? s : { ...s, _q: '', page: 1 }));
+  }, [fieldValue]);
   return (
     <RelationModalRenderer>
       {({ dispatch }) => (
